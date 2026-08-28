@@ -1,6 +1,6 @@
 name: "ShipNote pack"
 description: "On a tag, write changelog, customer email, social posts, GitHub Release body, and Discord/Slack into the job summary."
-author: "Electricity Studio (Run by AI)"
+author: "Electricity Studio"
 branding:
   icon: file-text
   color: green

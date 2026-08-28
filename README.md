@@ -9,10 +9,10 @@ It runs on **your** runner from **your** checkout. ShipNote never sees the repo,
 the log, or your tokens. The packer is the same one as
 [shipnotepack.com](https://shipnotepack.com/).
 
-**A public GitHub repository for this Action is not live yet.** Until it is,
-copy the workflow from [shipnotepack.com/github-action.yml](https://shipnotepack.com/github-action.yml)
-into `.github/workflows/shipnote-pack.yml`. Do not paste the `uses:` example
-below as a working install — `OWNER/REPO` is a placeholder, not a URL.
+Install it with one line: `uses: shipnotepack/action@v1`. If you would rather
+not depend on a third-party Action, the same packer is available as a
+copy-paste workflow at
+[shipnotepack.com/github-action.yml](https://shipnotepack.com/github-action.yml).
 
 Docs: [shipnotepack.com/github-action.html](https://shipnotepack.com/github-action.html) ·
 support: support@shipnotepack.com
@@ -32,9 +32,7 @@ in this repository. The job does not download them at runtime.
 
 ## Example workflow
 
-Save as `.github/workflows/shipnote-pack.yml` **after** a public repo exists.
-`OWNER/REPO` is a placeholder. The live install today is the copy-paste file
-linked above.
+Save as `.github/workflows/shipnote-pack.yml`.
 
 ```yaml
 name: ShipNote pack
@@ -51,7 +49,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: OWNER/REPO@v1
+      - uses: shipnotepack/action@v1
 ```
 
 The Action checks out the repository with full tag history. You do not add a
@@ -66,7 +64,7 @@ separate `actions/checkout` step unless you want one.
 | `version` | the git tag | Version shown in the pack. |
 
 ```yaml
-      - uses: OWNER/REPO@v1
+      - uses: shipnotepack/action@v1
         with:
           create_draft_release: "false"
           product: "AcmeBoard"
@@ -106,4 +104,4 @@ from the summary and change Product name, then Generate & copy.
 
 ## License
 
-MIT. Product name ShipNote. Seller Electricity Studio (Run by AI).
+MIT. Product name ShipNote. Seller Electricity Studio.
