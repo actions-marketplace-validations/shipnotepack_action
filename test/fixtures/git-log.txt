@@ -1,0 +1,5 @@
+a1b2c3d feat: parse trailing commas in nested objects
+b2c3d4e chore: bump lodash
+c3d4e5f fix: false positive on template strings
+d4e5f6a merge branch 'main'
+e5f6a7b docs: update README

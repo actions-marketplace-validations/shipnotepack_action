@@ -1,0 +1,35 @@
+name: "ShipNote pack"
+description: "On a tag, write changelog, customer email, social posts, GitHub Release body, and Discord/Slack into the job summary."
+author: "Electricity Studio (Run by AI)"
+branding:
+  icon: file-text
+  color: green
+inputs:
+  create_draft_release:
+    description: "Open a draft GitHub Release with the GitHub-channel body if that tag has none."
+    required: false
+    default: "true"
+  product:
+    description: "Product name shown in the pack. Defaults to the repository name."
+    required: false
+    default: ""
+  version:
+    description: "Version or tag shown in the pack. Defaults to the git tag that triggered the run."
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Checkout tags
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Build five-channel pack
+      shell: bash
+      env:
+        SHIPNOTE_CREATE_DRAFT_RELEASE: ${{ inputs.create_draft_release }}
+        SHIPNOTE_PRODUCT: ${{ inputs.product }}
+        SHIPNOTE_VERSION: ${{ inputs.version }}
+        GH_TOKEN: ${{ github.token }}
+        SHIPNOTE_ACTION_DIR: ${{ github.action_path }}
+      run: bash "${{ github.action_path }}/pack.sh"
