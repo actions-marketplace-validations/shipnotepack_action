@@ -467,10 +467,10 @@ function titleFromBullets(version, bullets) {
   if (/invoice email|plan name|clearer billing/.test(joined)) themes.push("clearer billing");
   if (/\boffline\b/.test(joined)) themes.push("offline support");
   if (/role picker|team invites/.test(joined)) themes.push("team invites");
-  if (/twice as fast|2×|dashboard loads/.test(joined)) themes.push("snappier performance");
+  if (/twice as fast|(^|[^0-9])2×|dashboard loads/.test(joined)) themes.push("snappier performance");
   if (/deprecat|migration-facing|sunset|cursor pagination/.test(joined)) themes.push("API migration notes");
   if (/idempotency|webhook retry|5xx/.test(joined)) themes.push("API reliability");
-  if (/crash when|null-pointer|comments that disappeared/.test(joined)) themes.push("stability fixes");
+  if (/crash when renaming|null-pointer|comments that disappeared/.test(joined)) themes.push("stability fixes");
   if (/\bsso\b|oauth redirect|sign-in is more reliable/.test(joined)) themes.push("sign-in polish");
   if (/dark mode/.test(joined)) themes.push("UI polish");
   if (themes.length) {
@@ -492,7 +492,7 @@ function formatDate(iso) {
 
 function benefitSubject(product, title, polished) {
   var joined = polished.join(" ").toLowerCase();
-  if (/export|csv|download/.test(joined) && /invoice|billing|subject/.test(joined)) {
+  if (/(\bcsv\b|export timeout|no longer time out|exports that keep)/.test(joined) && /invoice|billing|subject/.test(joined)) {
     return "You can export faster - and invoices finally make sense";
   }
   if (/offline/.test(joined) && /invite|role|team/.test(joined)) {
@@ -501,22 +501,22 @@ function benefitSubject(product, title, polished) {
   if (/offline/.test(joined)) {
     return "Work continues when the network does not";
   }
-  if (/export|csv|download/.test(joined)) {
+  if (/\bcsv\b|export timeout|no longer time out|exports that keep/.test(joined)) {
     return "Exports that keep up with your data";
   }
-  if (/dashboard|twice as fast|snappier|loads about/.test(joined)) {
+  if (/dashboard loads|twice as fast|snappier/.test(joined)) {
     return "A snappier " + (product || "product") + " dashboard";
   }
-  if (/invoice|billing|subject|payment/.test(joined)) {
+  if (/invoice email|plan name|clearer billing/.test(joined)) {
     return "Billing details that scan at a glance";
   }
-  if (/invite|role picker|permissions/.test(joined)) {
+  if (/role picker|team invites/.test(joined)) {
     return "Team invites that match how you work";
   }
-  if (/deprecat|migration|sunset|breaking|v2\/|\/v1\//.test(joined)) {
+  if (/deprecat|migration-facing|sunset|cursor pagination/.test(joined)) {
     return (product ? product + ": " : "") + "migration notes and what still works";
   }
-  if (/crash when|null-pointer|comments that disappeared/.test(joined)) {
+  if (/crash when renaming|null-pointer|comments that disappeared/.test(joined)) {
     return "A quieter, stabler " + (product || "product");
   }
   if (polished.length === 1) {
@@ -588,7 +588,7 @@ function mapPainHook(painHook) {
   if (!s) return "";
   if (/export|csv/i.test(s)) return "export timeouts";
   if (/invoice|billing|subject/i.test(s)) return "messy invoice subjects";
-  if (/crash|rename|npe|null/i.test(s)) return "that rename-during-sync crash";
+  if (/crash when renaming|rename-during-sync|null-pointer/i.test(s)) return "that rename-during-sync crash";
   if (/comment|disappear|refresh/i.test(s)) return "comments vanishing after refresh";
   if (/offline/i.test(s)) return "no offline mobile mode";
   if (/dashboard|load time/i.test(s)) return "a sluggish dashboard";
@@ -737,15 +737,11 @@ function buildPack(product, version, dateIso, bullets, tone, priorRaw, priorMeta
   }
   if (priorPolished.length) {
     changelogLines.push("");
-    changelogLines.push("### Continues from (your last-ship notes)");
+    changelogLines.push("### Continues from");
     changelogLines.push("");
     priorPolished.forEach(function (b) {
       changelogLines.push("- " + b);
     });
-    changelogLines.push("");
-    changelogLines.push(
-      "_Continuity section is only what you pasted as last-ship notes — not customer history._"
-    );
   }
   var changelog = changelogLines.join("\n");
 
@@ -765,12 +761,10 @@ function buildPack(product, version, dateIso, bullets, tone, priorRaw, priorMeta
     tone === "technical"
       ? "Regards,\n" + (product || "Product") + " maintainers"
       : tone === "friendly"
-        ? "Thanks for building with " + (product || "us") + " - we mean it.\n\n- The " + (product || "product") + " team"
-        : "Thanks for shipping with " + (product || "us") + ".\n\n- The " + (product || "product") + " team";
+        ? "Thanks for building with " + (product || "us") + ".\n\n- The " + (product || "product") + " team"
+        : "Thanks.\n\n- The " + (product || "product") + " team";
 
   var continuity = "";
-  var prior = priorMeta || null;
-  // Prefer explicit last-ship notes; fall back to caller-supplied prior pack metadata only
   if (priorPolished.length) {
     var priorShort = priorPolished
       .slice(0, 2)
@@ -782,44 +776,11 @@ function buildPack(product, version, dateIso, bullets, tone, priorRaw, priorMeta
           .replace(/^Added /i, "");
       })
       .join("; ");
-    continuity =
-      "P.S. Following up on last ship (" +
-      priorShort +
-      ") — this note only rephrases what you pasted as last-ship notes.";
+    continuity = "P.S. Follows last ship: " + priorShort + ".";
     if (tone === "friendly") {
-      continuity =
-        "P.S. Building on last time (" +
-        priorShort +
-        "). Edit or delete if you do not want continuity in the send.";
+      continuity = "P.S. Building on last time: " + priorShort + ".";
     } else if (tone === "technical") {
-      continuity =
-        "Note (continuity): rephrased from last-ship notes you provided — " +
-        priorShort +
-        ". Delete this line if it should not ship with the email.";
-    }
-  } else if (prior && (prior.version || prior.title)) {
-    continuity =
-      "P.S. Last pack for " +
-      (product || "this product") +
-      " in this browser was" +
-      (prior.version ? " " + prior.version : "") +
-      (prior.title ? " (" + prior.title + ")" : "") +
-      " — continuity note only; not a claim about customer history.";
-    if (tone === "friendly") {
-      continuity =
-        "P.S. In this browser the last " +
-        (product || "product") +
-        " pack I drafted was" +
-        (prior.version ? " " + prior.version : "") +
-        (prior.title ? " — " + prior.title : "") +
-        ". Edit or delete this line if you do not want it in the send.";
-    } else if (tone === "technical") {
-      continuity =
-        "Note (local only): prior draft for " +
-        (product || "this product") +
-        (prior.version ? " @" + prior.version : "") +
-        (prior.title ? " — " + prior.title : "") +
-        " was stored in this browser. Not customer history; remove if unused.";
+      continuity = "Note: follows last ship — " + priorShort + ".";
     }
   }
 
@@ -870,10 +831,12 @@ function buildPack(product, version, dateIso, bullets, tone, priorRaw, priorMeta
       ". " +
       (shortList[0] ? capitalize(shortList[0]) + "." : "");
   } else if (tone === "technical") {
+    var titleNorm = (title || "").replace(/\.$/, "").toLowerCase();
+    var firstNorm = (shortList[0] || "").replace(/\.$/, "").toLowerCase();
     var sameTitle =
-      shortList[0] &&
-      title &&
-      shortList[0].replace(/\.$/, "").toLowerCase() === title.replace(/\.$/, "").toLowerCase();
+      firstNorm &&
+      titleNorm &&
+      (firstNorm === titleNorm || firstNorm.indexOf(titleNorm) === 0);
     social1 =
       "Release" +
       (ver ? " " + ver : "") +
@@ -886,9 +849,7 @@ function buildPack(product, version, dateIso, bullets, tone, priorRaw, priorMeta
   // Optional honest continuity (only if maker pasted last-ship notes)
   if (priorPolished.length) {
     var contBit =
-      tone === "technical"
-        ? " Builds on last-ship notes you provided."
-        : " Continues last ship (from your notes).";
+      tone === "technical" ? " Builds on last ship." : " Continues last ship.";
     if ((social1 + contBit).length <= 280) social1 += contBit;
   }
   if (social1.length > 260) {
@@ -903,15 +864,16 @@ function buildPack(product, version, dateIso, bullets, tone, priorRaw, priorMeta
 
   // Social 2: benefit-first only when we mapped a known pain.
   // Never "If you hit <feature bullet from a git log>".
+  // Never "is tagged" — a maintainer would not paste that.
   var painHook = mapPainHook(shortList[0] || "");
   var social2;
   if (!painHook) {
-    social2 =
-      (product ? product : "This release") +
-      (ver ? " " + ver : "") +
-      " is tagged. " +
-      (title || shortList[0] || "See the changelog") +
-      ".";
+    var hookBit = shortList[1] || shortList[0] || title || "See the changelog";
+    social2 = capitalize(hookBit).replace(/\.$/, "") + ".";
+    var who = ((product || "") + (ver ? " " + ver : "")).trim();
+    if (who && social2.length + who.length < 240) {
+      social2 = social2.replace(/\.$/, "") + " (" + who + ").";
+    }
   } else if (tone === "technical") {
     social2 =
       "If you hit " +
@@ -939,7 +901,7 @@ function buildPack(product, version, dateIso, bullets, tone, priorRaw, priorMeta
   }
 
   var joinedLower = polished.join(" ").toLowerCase();
-  var nextTheme = "speed, clarity, or stability";
+  var nextTheme = "";
   if (/\bcsv\b|export timeout|no longer time out|twice as fast|dashboard loads/.test(joinedLower)) {
     nextTheme = "exports, performance, or something else on your critical path";
   } else if (/invoice email|plan name/.test(joinedLower)) {
@@ -948,7 +910,7 @@ function buildPack(product, version, dateIso, bullets, tone, priorRaw, priorMeta
     nextTheme = "mobile offline, sync, or desktop parity";
   } else if (/role picker|team invites/.test(joinedLower)) {
     nextTheme = "invites, roles, or workspace permissions";
-  } else if (/crash when|null-pointer|comments that disappeared/.test(joinedLower)) {
+  } else if (/crash when renaming|null-pointer|comments that disappeared/.test(joinedLower)) {
     nextTheme = "stability, edge cases, or a quiet week";
   } else if (/\bsso\b|oauth redirect|sign-in is more reliable/.test(joinedLower)) {
     nextTheme = "sign-in, invites, or account recovery";
@@ -958,17 +920,18 @@ function buildPack(product, version, dateIso, bullets, tone, priorRaw, priorMeta
   var social3 =
     "What should " +
     (product || "we") +
-    " polish next - " +
-    nextTheme +
+    " polish next" +
+    (nextTheme ? " - " + nextTheme : "") +
     "? Reply and tell us.";
   if (tone === "technical") {
-    social3 = "Feedback welcome on " + nextTheme + " for " + (product || "the next release") + ".";
+    social3 = nextTheme
+      ? "Feedback welcome on " + nextTheme + " for " + (product || "the next release") + "."
+      : "Feedback welcome on " + (product || "the next release") + ".";
   } else if (tone === "friendly") {
     social3 =
       "Curious what you want next from " +
       (product || "us") +
-      " - " +
-      nextTheme +
+      (nextTheme ? " - " + nextTheme : "") +
       "? Hit reply.";
   }
 
@@ -989,8 +952,8 @@ function buildPack(product, version, dateIso, bullets, tone, priorRaw, priorMeta
     liBullets +
     "\n\n" +
     (tone === "technical"
-      ? "Notes above match what we merged - no invented scope."
-      : "If this release solves a pain for you, reply with what we should polish next.");
+      ? "More in the release notes."
+      : "If this helps, reply with what we should polish next.");
   if (social4.length > 1200) {
     social4 =
       "Shipped" +
@@ -1015,16 +978,6 @@ function buildPack(product, version, dateIso, bullets, tone, priorRaw, priorMeta
       githubLines.push("- " + b);
     });
   }
-  githubLines.push("");
-  githubLines.push("---");
-  githubLines.push("");
-  githubLines.push(
-    "Full notes for " +
-      (product || "this release") +
-      (ver ? " " + ver : "") +
-      " · " +
-      dateLabel
-  );
   var github = githubLines.join("\n");
 
   // Discord / Slack paste (free): short channel announcement from same bullets only
@@ -1055,14 +1008,7 @@ function buildPack(product, version, dateIso, bullets, tone, priorRaw, priorMeta
       ": " +
       title;
   }
-  var chat =
-    chatHead +
-    "\n\n" +
-    chatBullets +
-    "\n\n" +
-    (tone === "technical"
-      ? "_Paste into #releases / eng — same scope as the tag, no invented claims._"
-      : "_Paste into Discord or Slack — edit the voice to match your community._");
+  var chat = chatHead + "\n\n" + chatBullets;
 
   var fullMarkdown = [
     "# ShipNote pack - " + (product || "Release") + (ver ? " " + ver : ""),
