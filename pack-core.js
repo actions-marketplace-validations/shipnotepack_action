@@ -37,11 +37,15 @@ function polishBullet(line) {
   var t = line.replace(/\s+/g, " ").replace(/\.$/, "").trim();
   // Strip common git / PR prefixes before canned matches
   t = t.replace(/^(feat|fix|chore|docs|perf|refactor|style|test)(\([^)]*\))?:\s*/i, "");
+  while (/^(PERF|FEATURE|BUG|FIX|DOCS?)\s+#\d+\s*[,:]?\s*/i.test(t)) {
+    t = t.replace(/^(PERF|FEATURE|BUG|FIX|DOCS?)\s+#\d+\s*[,:]?\s*/i, "");
+  }
   // Keep Add/Fix when the rest is a flag or code span (gh --worktree, `RESTWithNext`).
   t = t.replace(/^(fix|fixed|fixes)\s+(?!`|--)/i, "");
   t = t.replace(/^(add|added|adds)\s+(?!`|--)/i, "");
   t = t.replace(/^(improve|improved|improves)\s+(?!`|--)/i, "");
   t = t.replace(/^(update|updated|updates)\s+(?!`|--)/i, "");
+  t = t.replace(/\s*\(#\d+\s+by\s+@[\w-]+(?:\[bot\])?\)/gi, "");
   t = t.replace(/\s+by\s+@[\w-]+(?:\[bot\])?(?:\s+in\s+\S+)?$/i, "");
   t = t.replace(/\s+\(#\d+\)$/g, "");
 
@@ -213,19 +217,19 @@ function polishBullet(line) {
     [/^webhook signature (fail|invalid)/i, "Webhook signatures verify more reliably"],
     [/^replay attack/i, "Webhook replay protection is stronger"],
     // 2026-08-08 PR-paste expansion (roadmap N3 free pack quality)
-    [/^hotfix:?\s*/i, "Hotfix: "],
-    [/^security:?\s*/i, "Security: "],
-    [/^patch:?\s*/i, "Patch: "],
+    [/^hotfix:\s*/i, "Hotfix: "],
+    [/^security:\s*/i, "Security: "],
+    [/^patch:\s*/i, "Patch: "],
     [/^build\(deps\):\s*/i, "Updated dependencies: "],
-    [/^dependabot:?\s*/i, "Dependency update: "],
-    [/^renovate:?\s*/i, "Dependency update: "],
-    [/^ci:?\s*/i, "CI: "],
-    [/^release:?\s*/i, "Release: "],
-    [/^docs:?\s*/i, "Docs: "],
-    [/^perf:?\s*/i, "Performance: "],
-    [/^refactor:?\s*/i, "Refactor: "],
-    [/^test:?\s*/i, "Tests: "],
-    [/^style:?\s*/i, "Style: "],
+    [/^dependabot:\s*/i, "Dependency update: "],
+    [/^renovate:\s*/i, "Dependency update: "],
+    [/^ci:\s*/i, "CI: "],
+    [/^release:\s*/i, "Release: "],
+    [/^docs:\s*/i, "Docs: "],
+    [/^perf(\([^)]*\))?:\s*/i, "Performance: "],
+    [/^refactor:\s*/i, "Refactor: "],
+    [/^test:\s*/i, "Tests: "],
+    [/^style:\s*/i, "Style: "],
     [/^resolve(d)? merge conflict/i, "Resolved merge conflicts"],
     [/^fix merge conflict/i, "Resolved merge conflicts"],
     [/^address(ed)? (pr |review )?feedback/i, "Addressed review feedback"],
@@ -411,7 +415,7 @@ function polishBullet(line) {
     if (!/^(improved|faster)/i.test(t)) {
       // "dashboard loads about 2× faster" is already good
     }
-  } else if (/timeout|slow|speed|faster|perf/i.test(t) && !/^(improved|faster)/i.test(t) && !/loads about/i.test(t)) {
+  } else if (/timeout|slow|speed|faster|\bperf\b/i.test(t) && !/^(improved|faster|performance)/i.test(t) && !/loads about/i.test(t)) {
     t = "Improved " + t.charAt(0).toLowerCase() + t.slice(1);
   } else if (/^dark mode/i.test(t)) {
     t = "Added " + t.charAt(0).toLowerCase() + t.slice(1);
@@ -587,7 +591,8 @@ function mapPainHook(painHook) {
   if (/crash|rename|npe|null/i.test(s)) return "that rename-during-sync crash";
   if (/comment|disappear|refresh/i.test(s)) return "comments vanishing after refresh";
   if (/offline/i.test(s)) return "no offline mobile mode";
-  if (/dashboard|faster|performance|load time/i.test(s)) return "a sluggish dashboard";
+  if (/dashboard|load time/i.test(s)) return "a sluggish dashboard";
+  if (/\bfaster\b/i.test(s) && /dashboard|load/i.test(s)) return "a sluggish dashboard";
   if (/invite|role/i.test(s)) return "clunky team invites";
   if (/dark mode/i.test(s)) return "missing dark mode";
   if (/race|watcher|webhook|pagination/i.test(s)) return "watcher races and flaky webhooks";
