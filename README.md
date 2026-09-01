@@ -9,10 +9,44 @@ It runs on **your** runner from **your** checkout. ShipNote never sees the repo,
 the log, or your tokens. The packer is the same one as
 [shipnotepack.com](https://shipnotepack.com/).
 
+Job summary from GitHub CLI 2.76.0 (CHANGELOG Features / Fixes, same packer):
+
+```
+Changelog
+### Features
+- Assign Copilot during issue create
+- Display immutable field in release view
+### Fixes
+- Do not fetch logs for skipped jobs
+
+Email
+Subject: GitHub CLI v2.76.0 — 2 features, 1 fix
+Hello,
+GitHub CLI v2.76.0 — 2 features, 1 fix.
+
+Social
+1. Release v2.76.0 (GitHub CLI): Assign Copilot during issue create.
+2. Display immutable field in release view (GitHub CLI v2.76.0).
+3. Feedback welcome on GitHub CLI.
+
+GitHub Release
+## What's new
+GitHub CLI v2.76.0 — 2 features, 1 fix.
+### Features
+- Assign Copilot during issue create
+- Display immutable field in release view
+### Fixes
+- Do not fetch logs for skipped jobs
+
+Discord/Slack
+`GitHub CLI@v2.76.0` shipped — Assign Copilot during issue create
+```
+
 Install it with one line: `uses: shipnotepack/action@v1`. If you would rather
 not depend on a third-party Action, the same packer is available as a
 copy-paste workflow at
 [shipnotepack.com/github-action.yml](https://shipnotepack.com/github-action.yml).
+Marketplace: [ShipNote pack](https://github.com/marketplace/actions/shipnote-pack).
 
 Docs: [shipnotepack.com/github-action.html](https://shipnotepack.com/github-action.html) ·
 support: support@shipnotepack.com
